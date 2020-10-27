@@ -81,14 +81,14 @@ QVariant ItemController<T>::GetValue(const InnerType * item, int index, int role
 {
     const auto key = std::pair<int,int>(index, role);
     {
-        auto it = std::find(getters.begin(),getters.end(),key);
+        auto it = getters.find(key);
         if(it!=getters.end())
             return it->second(item);
     }
     {
-        auto it = std::find(wholeRowGetters.begin(),wholeRowGetters.end(),key);
-        if(it!=wholeRowGetters.end())
-            return it->second(item);
+        auto it1 = wholeRowGetters.find(key.first);
+        if(it1!=wholeRowGetters.end())
+            return it1->second(item);
     }
     return {};
 }
@@ -97,7 +97,7 @@ template<class T>
 bool ItemController<T>:: SetValue(InnerType * item, int column, const QVariant & value, int role)
 {
     const auto key = std::pair<int,int>(column, role);
-    auto it = std::find(setters.begin(),setters.end(),key);
+    auto it = setters.find(key);
     if(it!=setters.end())
         return it->second(item, value);
     return false;

@@ -16,7 +16,7 @@
 template<class T>
 class TreeItem : public TreeItemInterface
 {
-    using InnerType = typename std::remove_pointer<T>::type;
+    using InnerType = T;
     using ItemPointerType = std::shared_ptr<TreeItemInterface>;
 public:
     TreeItem(const T & data);
@@ -28,13 +28,22 @@ public:
     virtual QList<ItemPointerType> GetChildren();
     virtual QList<ItemPointerType>& GetChildrenRef();
 
-    void ResetState(std::true_type);
-    void ResetState(std::false_type);
+    void ResetState();
 
-    void AssignNewData(InnerType, std::true_type);
-    void AssignNewData(InnerType, std::false_type);
-    void AssignNewData(InnerType*, std::true_type);
-    void AssignNewData(InnerType*, std::false_type);
+    template <class OwnType = InnerType, class AssignedType>
+    void AssignNewData(AssignedType newData){
+        if constexpr(std::is_pointer<AssignedType>::value && std::is_pointer<InnerType>::value)
+            m_data = newData;
+        else if constexpr(std::is_pointer<AssignedType>::value && !std::is_pointer<InnerType>::value)
+            *m_data = newData;
+        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<InnerType>::value)
+            m_data = *newData;
+        else if constexpr(!std::is_pointer<AssignedType>::value && !std::is_pointer<InnerType>::value)
+            m_data = newData;
+    }
+//    void AssignNewData(InnerType, std::false_type);
+//    void AssignNewData(InnerType*, std::true_type);
+//    void AssignNewData(InnerType*, std::false_type);
 
     virtual ~TreeItem();
 
@@ -86,18 +95,11 @@ public:
 
     virtual int row();
 
-    template <class X = T>
-    typename std::enable_if<std::is_pointer<T>::value, X>::type
-    GetPointer()
-    {
-        return m_data;
-    }
-
-    template <class X = T>
-    typename std::enable_if<!std::is_pointer<T>::value, X>::type*
-    GetPointer()
-    {
-        return &m_data;
+    InnerType* GetPointer(){
+        if constexpr(std::is_pointer<InnerType>::value)
+            return m_data;
+        else
+            return &m_data;
     }
 
 
@@ -128,14 +130,14 @@ private:
 template<class T>
 TreeItem<T>::TreeItem(const T & data) : TreeItemInterface()
 {
-    ResetState(std::is_pointer<T>());
+    ResetState();
     m_data = data;
 }
 
 template<class T>
 TreeItem<T>::TreeItem() : TreeItemInterface()
 {
-    ResetState(std::is_pointer<T>());
+    ResetState();
 }
 
 template<class T>
@@ -151,52 +153,28 @@ QList<typename TreeItem<T>::ItemPointerType>& TreeItem<T>::GetChildrenRef()
 }
 
 template<class T>
-void TreeItem<T>::ResetState(std::true_type)
+void TreeItem<T>::ResetState()
 {
     m_checkState = Qt::Unchecked;
-    m_data = nullptr;
-    m_children.clear();
-    m_parent.reset();
-    m_isCheckable = true;
-    controller = std::shared_ptr<ItemController<InnerType>>();
-}
-template<class T>
-void TreeItem<T>::ResetState(std::false_type)
-{
-    m_checkState = Qt::Unchecked;
-    m_data = T();
+    if constexpr(std::is_pointer<T>::value)
+        m_data = nullptr;
+    else
+        m_data = T();
     m_children.clear();
     m_parent.reset();
     m_isCheckable = true;
     controller = std::shared_ptr<ItemController<InnerType>>();
 }
 
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType , std::true_type){
-    Q_ASSERT(false);
-}
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType* data, std::true_type){
-    m_data = data;
-}
-
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType data, std::false_type){
-    m_data = data;
-}
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType* data, std::false_type){
-    m_data = *data;
-}
 template<class T>
 void TreeItem<T>::SetInternalData(const InnerType  & _data)
 {
-    AssignNewData(_data, std::is_pointer<T>());
+    AssignNewData(_data);
 }
 template<class T>
 void TreeItem<T>::SetInternalData(InnerType * _data)
 {
-    AssignNewData(_data, std::is_pointer<T>());
+    AssignNewData(_data);
 }
 
 template<class T>
@@ -221,7 +199,8 @@ QVariant TreeItem<T>::data(int column, int role)
 {
     if(role == Qt::FontRole)
         return font;
-    return controller->GetValue(GetPointer<T>(), column, role);
+    InnerType* pointer = GetPointer();
+    return controller->GetValue(pointer, column, role);
 }
 
 template<class T>
@@ -250,7 +229,7 @@ bool TreeItem<T>::setData(int column, const QVariant & value, int role)
         font = qvariant_cast<QFont>(value);
         return true;
     }
-    bool result = controller->SetValue(GetPointer<T>(), column,value, role);
+    bool result = controller->SetValue(GetPointer(), column,value, role);
     return result;
 }
 
@@ -353,7 +332,7 @@ int TreeItem<T>::IndexOf(TreeItemInterface * item)
 template<class T>
 void* TreeItem<T>::InternalPointer()
 {
-    return static_cast<void*>(GetPointer<T>());
+    return static_cast<void*>(GetPointer());
 }
 
 template<class T>
