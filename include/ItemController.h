@@ -1,12 +1,10 @@
-#ifndef _ITEMCONTROLLER_H
-#define _ITEMCONTROLLER_H
-
+#pragma once
 
 #include <QStringList>
 #include <QVariant>
 #include <QModelIndex>
-#include <QVector>
-#include <QHash>
+#include <unordered_map>
+#include <vector>
 
 #include <type_traits>
 
@@ -18,31 +16,34 @@ template<class T>
 class ItemController
 {
   public:
+    using InnerType = typename std::remove_pointer_t<T>;
+    using GetterFunctor = std::function<QVariant(const InnerType*)>;
+    using SetterFunctor = std::function<bool(InnerType*, QVariant)>;
     inline QStringList GetColumns() const;
 
     void SetColumns(QStringList value);
 
-    QVariant GetValue(const typename std::remove_pointer<T>::type * item, int index, int role);
+    QVariant GetValue(const InnerType * item, int index, int role);
 
-    bool SetValue(typename std::remove_pointer<T>::type * item, int column, const QVariant & value, int role);
+    bool SetValue(InnerType * item, int column, const QVariant & value, int role);
 
-    void AddGetter(const QPair<int,int> & index,  std::function<QVariant(const typename std::remove_pointer< T>::type*)> function);
-    void AddGetter(int row, const QVector<int> & roles, std::function<QVariant(const typename std::remove_pointer< T>::type*)> function);
+    void AddGetter(const std::pair<int,int> & index,  GetterFunctor function);
+    void AddGetter(int row, const std::vector<int> &roles, GetterFunctor function);
 
-    void AddWholeRowGetter(int role,  std::function<QVariant(const typename std::remove_pointer< T>::type*)> function);
-    void AddWholeRowGetter(const QVector<int>& roles, std::function<QVariant(const typename std::remove_pointer< T>::type*)> function);
+    void AddWholeRowGetter(int role,  GetterFunctor function);
+    void AddWholeRowGetter(const std::vector<int> &roles, GetterFunctor function);
 
 
 
-    void AddSetter(const QPair<int,int> & index, std::function<bool(typename std::remove_pointer<T>::type*, QVariant)> function);
-    void AddSetter(int row, const QVector<int> & roles, std::function<bool(typename std::remove_pointer<T>::type*, QVariant)> function);
+    void AddSetter(const std::pair<int,int> & index, SetterFunctor function);
+    void AddSetter(int row, const std::vector<int> &roles, SetterFunctor function);
 
 
     Qt::ItemFlags flags(const QModelIndex & index) const;
 
-    static inline QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> GetFlagsFunctors();
+    static inline std::vector<std::function<Qt::ItemFlags(const QModelIndex&)>> GetFlagsFunctors();
 
-    static void SetFlagsFunctors(QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> value);
+    static void SetFlagsFunctors(std::vector<std::function<Qt::ItemFlags(const QModelIndex &)>> value);
 
     static void AddFlagsFunctor(std::function<Qt::ItemFlags(const QModelIndex&)> functor);
 
@@ -50,14 +51,14 @@ class ItemController
 
   private:
      QStringList columns;
-     QHash<QPair<int, int>, std::function<QVariant(const typename std::remove_pointer<T>::type *)>> getters;
-     QHash<int, std::function<QVariant(const typename std::remove_pointer<T>::type *)>> wholeRowGetters;
-     QHash<QPair<int,int>, std::function<bool(typename std::remove_pointer<T>::type *, QVariant)>> setters;
-     static QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> flagsFunctors;
+     std::unordered_map<std::pair<int, int>, GetterFunctor> getters;
+     std::unordered_map<int, GetterFunctor> wholeRowGetters;
+     std::unordered_map<std::pair<int,int>, SetterFunctor> setters;
+     static std::vector<std::function<Qt::ItemFlags(const QModelIndex&)>> flagsFunctors;
 
 };
 template<class T>
-QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> ItemController<T>::flagsFunctors;
+std::vector<std::function<Qt::ItemFlags(const QModelIndex&)>> ItemController<T>::flagsFunctors;
 
 template<class T>
 inline QStringList ItemController<T>::GetColumns() const
@@ -72,108 +73,89 @@ void ItemController<T>::SetColumns(QStringList value)
 }
 
 template<class T>
-QVariant ItemController<T>::GetValue(const typename std::remove_pointer<T>::type * item, int index, int role)
+QVariant ItemController<T>::GetValue(const InnerType * item, int index, int role)
 {
-    // Bouml preserved body begin 00203B2A
-    if(getters.contains(QPair<int,int>(index, role)))
-        return getters[QPair<int,int>(index, role)](item);
-
-    if(wholeRowGetters.contains(role))
-        return wholeRowGetters[role](item);
-
-    return QVariant();
-    // Bouml preserved body end 00203B2A
+    const auto key = std::pair<int,int>(index, role);
+    {
+        auto it = std::find(getters.begin(),getters.end(),key);
+        if(it!=getters.end())
+            return it(item);
+    }
+    {
+        auto it = std::find(wholeRowGetters.begin(),wholeRowGetters.end(),key);
+        if(it!=wholeRowGetters.end())
+            return it(item);
+    }
+    return {};
 }
 
 template<class T>
-bool ItemController<T>:: SetValue(typename std::remove_pointer<T>::type * item, int column, const QVariant & value, int role)
+bool ItemController<T>:: SetValue(InnerType * item, int column, const QVariant & value, int role)
 {
-    // Bouml preserved body begin 00203BAA
-    if(!setters.contains(QPair<int,int>(column, role)))
-        return false;
-    return setters[QPair<int,int>(column, role)](item, value);
-    // Bouml preserved body end 00203BAA
+    const auto key = std::pair<int,int>(column, role);
+    auto it = std::find(setters.begin(),setters.end(),key);
+    if(it!=setters.end())
+        return it(item, value);
+    return false;
 }
 
 template<class T>
-void ItemController<T>::AddGetter(const QPair<int,int> & index, std::function<QVariant(const typename std::remove_pointer< T>::type*)> function)
+void ItemController<T>::AddGetter(const std::pair<int,int> & index, GetterFunctor function)
 {
-    // Bouml preserved body begin 002117AA
     getters.insert(index, function);
-    // Bouml preserved body end 002117AA
 }
 
 template<class T>
-void ItemController<T>::AddGetter(int row, const QVector<int> & roles, std::function<QVariant(const typename std::remove_pointer< T>::type*)> function)
+void ItemController<T>::AddGetter(int row, const std::vector<int> & roles, GetterFunctor function)
 {
-    // Bouml preserved body begin 00230DAA
     for(int role : roles)
-    {
         AddGetter(QPair<int,int>(row, role), function);
-    }
-    // Bouml preserved body end 00230DAA
 }
 
 template<class T>
-void ItemController<T>::AddWholeRowGetter(int role,  std::function<QVariant(const typename std::remove_pointer< T>::type*)> function)
+void ItemController<T>::AddWholeRowGetter(int role,  GetterFunctor function)
 {
-    // Bouml preserved body begin 002117AA
     wholeRowGetters.insert(role, function);
-    // Bouml preserved body end 002117AA
 }
 
 template<class T>
-void ItemController<T>::AddWholeRowGetter(const QVector<int>& roles, std::function<QVariant(const typename std::remove_pointer< T>::type*)> function)
+void ItemController<T>::AddWholeRowGetter(const std::vector<int>& roles, GetterFunctor function)
 {
-    // Bouml preserved body begin 00230DAA
     for(int role : roles)
-    {
         AddWholeRowGetter(role, function);
-    }
-    // Bouml preserved body end 00230DAA
 }
 
 template<class T>
-void ItemController<T>::AddSetter(const QPair<int,int> & index, std::function<bool(typename std::remove_pointer<T>::type*, QVariant)> function)
+void ItemController<T>::AddSetter(const std::pair<int,int> & index, SetterFunctor function)
 {
-    // Bouml preserved body begin 0021182A
     setters.insert(index, function);
-    // Bouml preserved body end 0021182A
 }
 
 template<class T>
-void ItemController<T>::AddSetter(int row, const QVector<int> & roles, std::function<bool(typename std::remove_pointer<T>::type*, QVariant)> function)
+void ItemController<T>::AddSetter(int row, const std::vector<int> & roles, SetterFunctor function)
 {
-    // Bouml preserved body begin 00230D2A
     for(int role : roles)
-    {
         AddSetter(QPair<int,int>(row, role), function);
-    }
-    // Bouml preserved body end 00230D2A
 }
 
 template<class T>
 Qt::ItemFlags ItemController<T>::flags(const QModelIndex & index) const
 {
-    // Bouml preserved body begin 0021AFAA
     Qt::ItemFlags result;
-    for(auto func: flagsFunctors)
-    {
+    for(auto& func: flagsFunctors)
         result |= func(index);
-    }
+
     return result;
-    // Bouml preserved body end 0021AFAA
 }
 
 template<class T>
-inline QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> ItemController<T>::GetFlagsFunctors()
-
+inline std::vector<std::function<Qt::ItemFlags(const QModelIndex&)>> ItemController<T>::GetFlagsFunctors()
 {
     return flagsFunctors;
 }
 
 template<class T>
-void ItemController<T>::SetFlagsFunctors(QVector<std::function<Qt::ItemFlags(const QModelIndex&)>> value)
+void ItemController<T>::SetFlagsFunctors(std::vector<std::function<Qt::ItemFlags(const QModelIndex&)>> value)
 
 {
     flagsFunctors = value;
@@ -183,16 +165,12 @@ template<class T>
 void ItemController<T>::AddFlagsFunctor(std::function<Qt::ItemFlags(const QModelIndex&)> functor)
 
 {
-    // Bouml preserved body begin 0021B22A
-    flagsFunctors.append(functor);
-    // Bouml preserved body end 0021B22A
+    flagsFunctors.push_back(functor);
 }
 
 template<class T>
 void ItemController<T>::SetDefaultTreeFunctor()
-
 {
-    // Bouml preserved body begin 0021B1AA
     AddFlagsFunctor([](const QModelIndex& index)
     {
         Qt::ItemFlags flags;
@@ -201,8 +179,5 @@ void ItemController<T>::SetDefaultTreeFunctor()
         return flags;
     }
     );
-    // Bouml preserved body end 0021B1AA
 }
 
-
-#endif
