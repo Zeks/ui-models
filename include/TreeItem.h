@@ -67,9 +67,9 @@ public:
 
     void addChild(ItemPointerType _child);
 
-    inline std::shared_ptr<ItemController<InnerType *>> GetController() const;
+    inline std::shared_ptr<ItemController<InnerType> > GetController() const;
 
-    void SetController(std::shared_ptr<ItemController<InnerType *>> value);
+    void SetController(std::shared_ptr<ItemController<InnerType> > value);
 
     virtual QStringList GetColumns();
 
@@ -121,7 +121,7 @@ protected:
 private:
     bool m_isCheckable;
     Qt::CheckState m_checkState;
-    std::shared_ptr<ItemController<InnerType * >> controller;
+    std::shared_ptr<ItemController<InnerType>> controller;
     QFont font;
     bool childrenExclusive = false;
 };
@@ -158,7 +158,7 @@ void TreeItem<T>::ResetState(std::true_type)
     m_children.clear();
     m_parent.reset();
     m_isCheckable = true;
-    controller = std::shared_ptr<ItemController<InnerType * >>();
+    controller = std::shared_ptr<ItemController<InnerType>>();
 }
 template<class T>
 void TreeItem<T>::ResetState(std::false_type)
@@ -168,7 +168,7 @@ void TreeItem<T>::ResetState(std::false_type)
     m_children.clear();
     m_parent.reset();
     m_isCheckable = true;
-    controller = std::shared_ptr<ItemController<InnerType * >>();
+    controller = std::shared_ptr<ItemController<InnerType>>();
 }
 
 template<class T>
@@ -326,13 +326,13 @@ void TreeItem<T>::addChild(ItemPointerType _child)
 }
 
 template<class T>
-inline std::shared_ptr<ItemController<typename TreeItem<T>::InnerType *>> TreeItem<T>::GetController() const
+inline std::shared_ptr<ItemController<typename TreeItem<T>::InnerType>> TreeItem<T>::GetController() const
 {
     return controller;
 }
 
 template<class T>
-void TreeItem<T>::SetController(std::shared_ptr<ItemController<InnerType * >> value)
+void TreeItem<T>::SetController(std::shared_ptr<ItemController<InnerType>> value)
 {
     controller = value;
 }
