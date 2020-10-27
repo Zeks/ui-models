@@ -4,7 +4,6 @@
 #include <QFont>
 #endif
 #include "include/TreeModel.h"
-#include "CoreZeroSql/Tracer.h"
 #include "include/ItemController.h"
 #include "include/TreeItemInterface.h"
 #ifdef DLL_PROJECT

@@ -23,7 +23,7 @@
 // *************************************************************************
 #ifndef TREEITEMFUNCTIONS_H
 #define TREEITEMFUNCTIONS_H
-#include "UniversalModels/include/TreeItemInterface.h"
+#include "ui-models/include/TreeItemInterface.h"
 #include "logger/QsLog.h"
 #include <assert.h>
 namespace TreeFunctions

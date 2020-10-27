@@ -1,4 +1,5 @@
 #include "include/genericeventfilter.h"
+#include <QEvent>
 GenericEventFilter::GenericEventFilter(QObject* parent):QObject(parent)
 {
 

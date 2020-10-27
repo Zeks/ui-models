@@ -9,11 +9,9 @@ Library{
 name: "UniversalModels"
 type: "staticlibrary"
 Depends { name: "Qt.core"}
-Depends { name: "Qt.sql" }
+Depends { name: "Qt.widgets" }
 Depends { name: "cpp" }
-Depends { name: "SettingsProjectLevel"}
-Depends { name: "CoreZeroSql"}
-
+Depends { name: "Environment"}
 Depends { name: "Qt.sql"}
 Depends { name: "Qt.concurrent"}
 Depends {
@@ -25,7 +23,7 @@ Depends {
     condition: project.useGuiLib
 }
 Depends { name: "logger" }
-Precompiled{condition:SettingsProjectLevel.usePrecompiledHeader}
+//Precompiled{condition:SettingsProjectLevel.usePrecompiledHeader}
 //cpp.combineCxxSources: conditionals.useCombinedSources &&
 //                       Funcs.inCombinedSourcesSet(conditionals.combinedSourcesSet, name)
 Export{
@@ -68,7 +66,6 @@ files: [
         "src/treeviewfunctions.cpp",
         "src/treeviewtemplatefunctions.cpp",
         "src/genericeventfilter.cpp",
-        "src/version/version.cpp",
     ]
 
 

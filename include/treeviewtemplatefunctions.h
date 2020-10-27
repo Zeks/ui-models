@@ -3,11 +3,11 @@
 #include <QAbstractItemView>
 #include <QTreeView>
 
-#include "UniversalModels/include/TreeModel.h"
-#include "UniversalModels/include/TreeItemInterface.h"
-#include "UniversalModels/include/treeviewfunctions.h"
-#include "UniversalModels/include/treeitemfunctions.h"
-#include "UniversalModels/include/l_tree_controller_global.h"
+#include "ui-models/include/TreeModel.h"
+#include "ui-models/include/TreeItemInterface.h"
+#include "ui-models/include/treeviewfunctions.h"
+#include "ui-models/include/treeitemfunctions.h"
+#include "ui-models/include/l_tree_controller_global.h"
 #include <type_traits>
 //class QAbstractItemView;
 template <typename T>

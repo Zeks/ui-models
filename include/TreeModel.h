@@ -1,6 +1,4 @@
-#ifndef RXTREE_TREEMODEL_H
-#define RXTREE_TREEMODEL_H
-
+#pragma once
 
 #include <QObject>
 #include <QVariant>
@@ -8,7 +6,7 @@
 #include <QString>
 #include <QDebug>
 
-#include "UniversalModels/include/TreeItemInterface.h"
+#include "ui-models/include/TreeItemInterface.h"
 #include "l_tree_controller_global.h"
 class QTreeView;
 
@@ -76,6 +74,3 @@ private:
 
 
 };
-
-
-#endif
