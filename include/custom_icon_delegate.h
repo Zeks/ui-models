@@ -25,7 +25,7 @@ public:
     std::function<QWidget *(QWidget *)> widgetCreator;
     std::function<void (const QStyledItemDelegate* , QPainter *,const QStyleOptionViewItem&,const QModelIndex &)> paintProcessor;
     std::function<bool(QEvent *event,QAbstractItemModel *model,const QStyleOptionViewItem &option,const QModelIndex &index)> editorEventProcessor;
-    bool hideText = false;
+    bool hideText = true;
 };
 
 

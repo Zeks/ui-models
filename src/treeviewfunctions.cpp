@@ -1,5 +1,5 @@
 #include "include/treeviewfunctions.h"
-#ifdef GUI_APPLICATION
+
 #include <QTreeView>
 
 #include <functional>
@@ -54,4 +54,4 @@ void StorePathsOfExpandedNodes(QStringList& paths, QTreeView* view)
 
 } // namespace TreeFunctions
 
-#endif
+

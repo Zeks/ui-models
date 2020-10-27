@@ -136,10 +136,10 @@ void ItemController<T>::AddSetter(const std::pair<int,int> & index, SetterFuncto
 }
 
 template<class T>
-void ItemController<T>::AddSetter(int row, const std::vector<int> & roles, SetterFunctor function)
+void ItemController<T>::AddSetter(int column, const std::vector<int> & roles, SetterFunctor function)
 {
     for(int role : roles)
-        AddSetter(QPair<int,int>(row, role), function);
+        AddSetter(std::pair<int,int>(column, role), function);
 }
 
 template<class T>

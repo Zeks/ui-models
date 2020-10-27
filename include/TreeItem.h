@@ -229,7 +229,8 @@ bool TreeItem<T>::setData(int column, const QVariant & value, int role)
         font = qvariant_cast<QFont>(value);
         return true;
     }
-    bool result = controller->SetValue(GetPointer(), column,value, role);
+    auto pointer = GetPointer();
+    bool result = controller->SetValue(pointer, column,value, role);
     return result;
 }
 

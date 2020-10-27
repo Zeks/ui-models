@@ -1,5 +1,4 @@
 #pragma once
-#ifdef GUI_APPLICATION
 #include <QAbstractItemView>
 #include <QTreeView>
 
@@ -65,7 +64,7 @@ std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<Interfac
     //data.SetInterfacePointer(newItem.data());
     return newItem;
 }
-#ifdef GUI_APPLICATION
+
 /* Возвращет из отображения указатель на текущий интерфейс
  * @view указатель на отображение из которого извлекается интерфейс
  **/
@@ -88,7 +87,7 @@ DataType* GetCurrentDataPointer(QAbstractItemView* view)
     DataType* data = static_cast<DataType*>(pointer->InternalPointer());
     return data;
 }
-#endif
+
 
 
 /* Возвращает родителя для создаваемого потомка на основании режима вставки
@@ -511,4 +510,4 @@ void Visit(std::function<void(InterfaceType*)> visitor,
     // Bouml preserved body end 002020AA
 }
 }
-#endif
+

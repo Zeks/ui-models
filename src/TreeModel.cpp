@@ -1,8 +1,8 @@
 #include <QSize>
-#ifdef GUI_APPLICATION
+
 #include <QColor>
 #include <QFont>
-#endif
+
 #include "include/TreeModel.h"
 #include "include/ItemController.h"
 #include "include/TreeItemInterface.h"
@@ -30,7 +30,7 @@ TreeModel::TreeModel(QObject * parent)
             if(role == Qt::DisplayRole || role == Qt::EditRole)
                 return QVariant(item->data(index.column(),role));
             if(role == Qt::SizeHintRole)
-                return  QVariant(QSize(100, 20));
+                return  QVariant(QSize(20, 20));
             return QVariant();
     };
     defaultRoleFunc = dataFunc;
