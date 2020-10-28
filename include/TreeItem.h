@@ -32,18 +32,15 @@ public:
 
     template <class OwnType = InnerType, class AssignedType>
     void AssignNewData(AssignedType newData){
-        if constexpr(std::is_pointer<AssignedType>::value && std::is_pointer<InnerType>::value)
-            m_data = newData;
-        else if constexpr(std::is_pointer<AssignedType>::value && !std::is_pointer<InnerType>::value)
+        if constexpr(std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
+            *m_data = *newData;
+        else if constexpr(std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
             *m_data = newData;
-        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<InnerType>::value)
+        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
             m_data = *newData;
-        else if constexpr(!std::is_pointer<AssignedType>::value && !std::is_pointer<InnerType>::value)
+        else if constexpr(!std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
             m_data = newData;
     }
-//    void AssignNewData(InnerType, std::false_type);
-//    void AssignNewData(InnerType*, std::true_type);
-//    void AssignNewData(InnerType*, std::false_type);
 
     virtual ~TreeItem();
 
@@ -197,8 +194,6 @@ int TreeItem<T>::childCount() const
 template<class T>
 QVariant TreeItem<T>::data(int column, int role)
 {
-    if(role == Qt::FontRole)
-        return font;
     InnerType* pointer = GetPointer();
     return controller->GetValue(pointer, column, role);
 }
@@ -224,11 +219,6 @@ Qt::CheckState TreeItem<T>::checkState()
 template<class T>
 bool TreeItem<T>::setData(int column, const QVariant & value, int role)
 {
-    if(role == Qt::FontRole)
-    {
-        font = qvariant_cast<QFont>(value);
-        return true;
-    }
     auto pointer = GetPointer();
     bool result = controller->SetValue(pointer, column,value, role);
     return result;

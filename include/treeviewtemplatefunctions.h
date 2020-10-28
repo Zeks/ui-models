@@ -490,7 +490,7 @@ void ApplyNodePathState(std::function<QVariant(DataType*)> dataAccessor,
 
 
 /* Рекурсивно проходит по нодам дерева функтором visitor**/
-template<typename InterfaceType, template <typename> class ItemType, typename DataType>
+template<typename InterfaceType>
 void Visit(std::function<void(InterfaceType*)> visitor,
                               QAbstractItemModel * model, QModelIndex startIndex = QModelIndex())
 {
@@ -502,7 +502,7 @@ void Visit(std::function<void(InterfaceType*)> visitor,
 
         if(!child.isValid())
             continue;
-        Visit<InterfaceType,ItemType, DataType>
+        Visit<InterfaceType>
                 (visitor, model, model->index(i, 0, startIndex));
     }
     InterfaceType* pointer = static_cast<InterfaceType*>(startIndex.internalPointer());

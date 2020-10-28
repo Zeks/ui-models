@@ -27,7 +27,7 @@ TreeModel::TreeModel(QObject * parent)
                 return QVariant(item->data(index.column(),role));
             if(role == Qt::ToolTipRole)
                 return QVariant(item->data(index.column(),role));
-            if(role == Qt::DisplayRole || role == Qt::EditRole)
+            if(role == Qt::DisplayRole || role == Qt::EditRole || role == Qt::FontRole)
                 return QVariant(item->data(index.column(),role));
             if(role == Qt::SizeHintRole)
                 return  QVariant(QSize(20, 20));
