@@ -12,19 +12,15 @@
 template <typename T>
 struct has_interface_pointer
 {
-    static const bool value = true;
+    static const bool value = false;
 };
 namespace TreeFunctions
 {
 template <typename DataType, typename InterfaceType>
-typename std::enable_if<has_interface_pointer<DataType>::value, void>::type AssignInterfacePointer(DataType& data, InterfaceType* interface)
+void AssignInterfacePointer(DataType& data, InterfaceType* interface)
 {
-    data.SetInterfacePointer(interface);
-}
-template <typename DataType, typename InterfaceType>
-typename std::enable_if<!has_interface_pointer<DataType>::value, void>::type AssignInterfacePointer(DataType& , InterfaceType* )
-{
-    //data.SetInterfacePointer(interface);
+    if constexpr(has_interface_pointer<DataType>::value)
+        data.SetInterfacePointer(interface);
 }
 
 
@@ -35,7 +31,7 @@ typename std::enable_if<!has_interface_pointer<DataType>::value, void>::type Ass
  **/
 template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
 std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType& data,
-                                                       QSharedPointer<ControllerType<DataType*>> controller)
+                                                       std::shared_ptr<ControllerType<DataType>> controller)
 {
     ItemType<DataType>* pointer = new ItemType<DataType>();
     std::shared_ptr<InterfaceType> newItem(pointer);
@@ -51,7 +47,23 @@ std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<Interfac
 
 template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
 std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType data,
-                                                       QSharedPointer<ControllerType<typename std::remove_pointer<DataType>::type*>> controller)
+                                                       std::shared_ptr<ControllerType<typename std::remove_pointer<DataType>::type>> controller)
+{
+    ItemType<DataType>* pointer = new ItemType<DataType>();
+    std::shared_ptr<InterfaceType> newItem(pointer);
+    pointer->SetInternalData(data);
+    pointer->SetController(controller);
+    pointer->SetParent(parentItem);
+
+    AssignInterfacePointer(data, newItem.get());
+
+    //data.SetInterfacePointer(newItem.data());
+    return newItem;
+}
+
+template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
+std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType* data,
+                                                       std::shared_ptr<ControllerType<typename std::remove_pointer<DataType>::type>> controller)
 {
     ItemType<DataType>* pointer = new ItemType<DataType>();
     std::shared_ptr<InterfaceType> newItem(pointer);

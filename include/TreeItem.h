@@ -35,9 +35,9 @@ public:
         if constexpr(std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
             *m_data = *newData;
         else if constexpr(std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
-            *m_data = newData;
-        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
             m_data = *newData;
+        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
+            *m_data = newData;
         else if constexpr(!std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
             m_data = newData;
     }
