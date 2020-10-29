@@ -39,6 +39,7 @@ class L_TREE_CONTROLLER_EXPORT TreeItemInterface : public std::enable_shared_fro
     virtual bool setData(int column, const QVariant & value, int role) = 0;
 
     virtual bool removeChildren(int position, int count) = 0;
+    virtual bool removeChildren() = 0;
 
     virtual bool insertChildren(int position, int count) = 0;
     virtual bool insertChildren(int position, int count, std::function<void(TreeItemInterface*,TreeItemInterface*)>) = 0;

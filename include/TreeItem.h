@@ -59,6 +59,7 @@ public:
     virtual bool setData(int column, const QVariant & value, int role);
 
     virtual bool removeChildren(int position, int count);
+    virtual bool removeChildren();
 
     virtual bool insertChildren(int position, int count);
 
@@ -235,6 +236,14 @@ bool TreeItem<T>::removeChildren(int position, int count)
     m_children.erase(leftBound,rightBound);
     return true;
 }
+
+template<class T>
+bool TreeItem<T>::removeChildren()
+{
+    m_children.clear();
+    return true;
+}
+
 
 template<class T>
 bool TreeItem<T>::insertChildren(int position, int count)
