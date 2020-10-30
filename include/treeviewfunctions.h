@@ -2,9 +2,9 @@
 #define TREEFUNCTIONS_H
 #include <QList>
 #include <QModelIndex>
-#ifdef GUI_APPLICATION
+
 #include <QAbstractItemView>
-#endif
+
 #include "l_tree_controller_global.h"
 
 

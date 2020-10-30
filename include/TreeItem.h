@@ -16,7 +16,7 @@
 template<class T>
 class TreeItem : public TreeItemInterface
 {
-    using InnerType = typename std::remove_pointer<T>::type;
+    using InnerType = T;
     using ItemPointerType = std::shared_ptr<TreeItemInterface>;
 public:
     TreeItem(const T & data);
@@ -28,13 +28,19 @@ public:
     virtual QList<ItemPointerType> GetChildren();
     virtual QList<ItemPointerType>& GetChildrenRef();
 
-    void ResetState(std::true_type);
-    void ResetState(std::false_type);
+    void ResetState();
 
-    void AssignNewData(InnerType, std::true_type);
-    void AssignNewData(InnerType, std::false_type);
-    void AssignNewData(InnerType*, std::true_type);
-    void AssignNewData(InnerType*, std::false_type);
+    template <class OwnType = InnerType, class AssignedType>
+    void AssignNewData(AssignedType newData){
+        if constexpr(std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
+            *m_data = *newData;
+        else if constexpr(std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
+            m_data = *newData;
+        else if constexpr(!std::is_pointer<AssignedType>::value && std::is_pointer<OwnType>::value)
+            *m_data = newData;
+        else if constexpr(!std::is_pointer<AssignedType>::value && !std::is_pointer<OwnType>::value)
+            m_data = newData;
+    }
 
     virtual ~TreeItem();
 
@@ -53,6 +59,7 @@ public:
     virtual bool setData(int column, const QVariant & value, int role);
 
     virtual bool removeChildren(int position, int count);
+    virtual bool removeChildren();
 
     virtual bool insertChildren(int position, int count);
 
@@ -67,9 +74,9 @@ public:
 
     void addChild(ItemPointerType _child);
 
-    inline std::shared_ptr<ItemController<InnerType *>> GetController() const;
+    inline std::shared_ptr<ItemController<InnerType> > GetController() const;
 
-    void SetController(std::shared_ptr<ItemController<InnerType *>> value);
+    void SetController(std::shared_ptr<ItemController<InnerType> > value);
 
     virtual QStringList GetColumns();
 
@@ -86,18 +93,11 @@ public:
 
     virtual int row();
 
-    template <class X = T>
-    typename std::enable_if<std::is_pointer<T>::value, X>::type
-    GetPointer()
-    {
-        return m_data;
-    }
-
-    template <class X = T>
-    typename std::enable_if<!std::is_pointer<T>::value, X>::type*
-    GetPointer()
-    {
-        return &m_data;
+    InnerType* GetPointer(){
+        if constexpr(std::is_pointer<InnerType>::value)
+            return m_data;
+        else
+            return &m_data;
     }
 
 
@@ -110,6 +110,22 @@ public:
     virtual void AddChildren(QList<ItemPointerType> children, int insertAfter = 0);
     bool AreChildrenExclusive()  const {return childrenExclusive;}
     void SetChildrenExclusive(bool value) {childrenExclusive = value;}
+    std::shared_ptr<TreeItemInterface> Clone(std::shared_ptr<TreeItemInterface> parent){
+        std::unique_ptr<TreeItem<T>> clonedItem(new TreeItem<T>());
+        clonedItem->childrenExclusive = this->childrenExclusive;
+        clonedItem->m_isCheckable = this->m_isCheckable;
+        clonedItem->m_checkState = this->m_checkState;
+        clonedItem->controller = this->controller;
+        clonedItem->m_data = this->m_data;
+        clonedItem->font = this->font;
+        clonedItem->SetParent(parent);
+        std::shared_ptr<TreeItemInterface> newPtr(clonedItem.release());
+
+        for(auto child: m_children){
+            newPtr->addChild(child->Clone(newPtr));
+        }
+        return newPtr;
+    };
 
 private:
     T m_data;
@@ -121,21 +137,21 @@ protected:
 private:
     bool m_isCheckable;
     Qt::CheckState m_checkState;
-    std::shared_ptr<ItemController<InnerType * >> controller;
+    std::shared_ptr<ItemController<InnerType>> controller;
     QFont font;
     bool childrenExclusive = false;
 };
 template<class T>
 TreeItem<T>::TreeItem(const T & data) : TreeItemInterface()
 {
-    ResetState(std::is_pointer<T>());
+    ResetState();
     m_data = data;
 }
 
 template<class T>
 TreeItem<T>::TreeItem() : TreeItemInterface()
 {
-    ResetState(std::is_pointer<T>());
+    ResetState();
 }
 
 template<class T>
@@ -151,52 +167,28 @@ QList<typename TreeItem<T>::ItemPointerType>& TreeItem<T>::GetChildrenRef()
 }
 
 template<class T>
-void TreeItem<T>::ResetState(std::true_type)
+void TreeItem<T>::ResetState()
 {
     m_checkState = Qt::Unchecked;
-    m_data = nullptr;
+    if constexpr(std::is_pointer<T>::value)
+        m_data = nullptr;
+    else
+        m_data = T();
     m_children.clear();
     m_parent.reset();
     m_isCheckable = true;
-    controller = std::shared_ptr<ItemController<InnerType * >>();
-}
-template<class T>
-void TreeItem<T>::ResetState(std::false_type)
-{
-    m_checkState = Qt::Unchecked;
-    m_data = T();
-    m_children.clear();
-    m_parent.reset();
-    m_isCheckable = true;
-    controller = std::shared_ptr<ItemController<InnerType * >>();
+    controller = std::shared_ptr<ItemController<InnerType>>();
 }
 
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType , std::true_type){
-    Q_ASSERT(false);
-}
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType* data, std::true_type){
-    m_data = data;
-}
-
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType data, std::false_type){
-    m_data = data;
-}
-template<class T>
-void TreeItem<T>::AssignNewData(InnerType* data, std::false_type){
-    m_data = *data;
-}
 template<class T>
 void TreeItem<T>::SetInternalData(const InnerType  & _data)
 {
-    AssignNewData(_data, std::is_pointer<T>());
+    AssignNewData(_data);
 }
 template<class T>
 void TreeItem<T>::SetInternalData(InnerType * _data)
 {
-    AssignNewData(_data, std::is_pointer<T>());
+    AssignNewData(_data);
 }
 
 template<class T>
@@ -219,9 +211,8 @@ int TreeItem<T>::childCount() const
 template<class T>
 QVariant TreeItem<T>::data(int column, int role)
 {
-    if(role == Qt::FontRole)
-        return font;
-    return controller->GetValue(GetPointer<T>(), column, role);
+    InnerType* pointer = GetPointer();
+    return controller->GetValue(pointer, column, role);
 }
 
 template<class T>
@@ -245,12 +236,8 @@ Qt::CheckState TreeItem<T>::checkState()
 template<class T>
 bool TreeItem<T>::setData(int column, const QVariant & value, int role)
 {
-    if(role == Qt::FontRole)
-    {
-        font = qvariant_cast<QFont>(value);
-        return true;
-    }
-    bool result = controller->SetValue(GetPointer<T>(), column,value, role);
+    auto pointer = GetPointer();
+    bool result = controller->SetValue(pointer, column,value, role);
     return result;
 }
 
@@ -265,6 +252,14 @@ bool TreeItem<T>::removeChildren(int position, int count)
     m_children.erase(leftBound,rightBound);
     return true;
 }
+
+template<class T>
+bool TreeItem<T>::removeChildren()
+{
+    m_children.clear();
+    return true;
+}
+
 
 template<class T>
 bool TreeItem<T>::insertChildren(int position, int count)
@@ -326,13 +321,13 @@ void TreeItem<T>::addChild(ItemPointerType _child)
 }
 
 template<class T>
-inline std::shared_ptr<ItemController<typename TreeItem<T>::InnerType *>> TreeItem<T>::GetController() const
+inline std::shared_ptr<ItemController<typename TreeItem<T>::InnerType>> TreeItem<T>::GetController() const
 {
     return controller;
 }
 
 template<class T>
-void TreeItem<T>::SetController(std::shared_ptr<ItemController<InnerType * >> value)
+void TreeItem<T>::SetController(std::shared_ptr<ItemController<InnerType>> value)
 {
     controller = value;
 }
@@ -353,7 +348,7 @@ int TreeItem<T>::IndexOf(TreeItemInterface * item)
 template<class T>
 void* TreeItem<T>::InternalPointer()
 {
-    return static_cast<void*>(GetPointer<T>());
+    return static_cast<void*>(GetPointer());
 }
 
 template<class T>

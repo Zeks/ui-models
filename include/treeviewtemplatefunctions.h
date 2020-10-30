@@ -1,5 +1,4 @@
 #pragma once
-#ifdef GUI_APPLICATION
 #include <QAbstractItemView>
 #include <QTreeView>
 
@@ -13,19 +12,15 @@
 template <typename T>
 struct has_interface_pointer
 {
-    static const bool value = true;
+    static const bool value = false;
 };
 namespace TreeFunctions
 {
 template <typename DataType, typename InterfaceType>
-typename std::enable_if<has_interface_pointer<DataType>::value, void>::type AssignInterfacePointer(DataType& data, InterfaceType* interface)
+void AssignInterfacePointer(DataType& data, InterfaceType* interface)
 {
-    data.SetInterfacePointer(interface);
-}
-template <typename DataType, typename InterfaceType>
-typename std::enable_if<!has_interface_pointer<DataType>::value, void>::type AssignInterfacePointer(DataType& , InterfaceType* )
-{
-    //data.SetInterfacePointer(interface);
+    if constexpr(has_interface_pointer<DataType>::value)
+        data.SetInterfacePointer(interface);
 }
 
 
@@ -36,7 +31,7 @@ typename std::enable_if<!has_interface_pointer<DataType>::value, void>::type Ass
  **/
 template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
 std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType& data,
-                                                       QSharedPointer<ControllerType<DataType*>> controller)
+                                                       std::shared_ptr<ControllerType<DataType>> controller)
 {
     ItemType<DataType>* pointer = new ItemType<DataType>();
     std::shared_ptr<InterfaceType> newItem(pointer);
@@ -52,7 +47,7 @@ std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<Interfac
 
 template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
 std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType data,
-                                                       QSharedPointer<ControllerType<typename std::remove_pointer<DataType>::type*>> controller)
+                                                       std::shared_ptr<ControllerType<typename std::remove_pointer<DataType>::type>> controller)
 {
     ItemType<DataType>* pointer = new ItemType<DataType>();
     std::shared_ptr<InterfaceType> newItem(pointer);
@@ -65,7 +60,23 @@ std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<Interfac
     //data.SetInterfacePointer(newItem.data());
     return newItem;
 }
-#ifdef GUI_APPLICATION
+
+template<typename DataType, typename InterfaceType, template <typename> class ItemType, template <typename> class ControllerType>
+std::shared_ptr<InterfaceType>  CreateInterfaceFromData(std::shared_ptr<InterfaceType> parentItem, DataType* data,
+                                                       std::shared_ptr<ControllerType<typename std::remove_pointer<DataType>::type>> controller)
+{
+    ItemType<DataType>* pointer = new ItemType<DataType>();
+    std::shared_ptr<InterfaceType> newItem(pointer);
+    pointer->SetInternalData(data);
+    pointer->SetController(controller);
+    pointer->SetParent(parentItem);
+
+    AssignInterfacePointer(data, newItem.get());
+
+    //data.SetInterfacePointer(newItem.data());
+    return newItem;
+}
+
 /* Возвращет из отображения указатель на текущий интерфейс
  * @view указатель на отображение из которого извлекается интерфейс
  **/
@@ -88,7 +99,7 @@ DataType* GetCurrentDataPointer(QAbstractItemView* view)
     DataType* data = static_cast<DataType*>(pointer->InternalPointer());
     return data;
 }
-#endif
+
 
 
 /* Возвращает родителя для создаваемого потомка на основании режима вставки
@@ -491,7 +502,7 @@ void ApplyNodePathState(std::function<QVariant(DataType*)> dataAccessor,
 
 
 /* Рекурсивно проходит по нодам дерева функтором visitor**/
-template<typename InterfaceType, template <typename> class ItemType, typename DataType>
+template<typename InterfaceType>
 void Visit(std::function<void(InterfaceType*)> visitor,
                               QAbstractItemModel * model, QModelIndex startIndex = QModelIndex())
 {
@@ -503,7 +514,7 @@ void Visit(std::function<void(InterfaceType*)> visitor,
 
         if(!child.isValid())
             continue;
-        Visit<InterfaceType,ItemType, DataType>
+        Visit<InterfaceType>
                 (visitor, model, model->index(i, 0, startIndex));
     }
     InterfaceType* pointer = static_cast<InterfaceType*>(startIndex.internalPointer());
@@ -511,4 +522,4 @@ void Visit(std::function<void(InterfaceType*)> visitor,
     // Bouml preserved body end 002020AA
 }
 }
-#endif
+

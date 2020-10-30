@@ -74,15 +74,11 @@ std::shared_ptr<InterfaceType> RecursiveGetSubset(InterfaceType* rootItem,
     bool hasValidDescendants = !newChildren.isEmpty();
     if(nodeValid || hasValidDescendants || (forcePick && pickDescendantsOfValidNodes))
     {
-        //newItem = std::shared_ptr<InterfaceType>(new ConcreteItemType(*dynamic_cast<ConcreteItemType*>(rootItem)));
-
         std::unique_ptr<ConcreteItemType> tmp(new ConcreteItemType);
         auto concreteRoot = dynamic_cast<ConcreteItemType*>(rootItem);
         tmp->SetInternalData(concreteRoot->GetPointer());
         tmp->SetController(concreteRoot->GetController());
         newItem.reset(tmp.release());
-
-
 
         for(std::shared_ptr<InterfaceType> child: newChildren)
         {
