@@ -13,15 +13,15 @@ class TableDataInterface;
 
 class   AdaptingTableModelPrivate  
 {
-friend class AdaptingTableModel;
+Q_DECLARE_PUBLIC(AdaptingTableModel)
   public:
-    explicit AdaptingTableModelPrivate(AdaptingTableModel* q);
+    explicit AdaptingTableModelPrivate();
 
     virtual ~AdaptingTableModelPrivate();
 
 
   private:
-     AdaptingTableModel * q = nullptr;
+     AdaptingTableModel * q_ptr = nullptr;
     QSharedPointer<TableDataInterface> interface;
 
 };

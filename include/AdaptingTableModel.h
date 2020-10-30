@@ -17,32 +17,31 @@ class AdaptingTableModelPrivate;
 
 class L_TREE_CONTROLLER_EXPORT AdaptingTableModel  : public QAbstractTableModel
 {
-    friend class AdaptingTableModelPrivate;
 
 Q_OBJECT
 
   public:
-    AdaptingTableModel(QObject * parent = 0);
+    AdaptingTableModel(QObject * parent = nullptr);
 
     virtual ~AdaptingTableModel();
 
-    QVariant data(const QModelIndex & index, int role) const;
+    QVariant data(const QModelIndex & index, int role) const override;
 
-    bool setData(const QModelIndex & index, const QVariant & value, int role);
+    bool setData(const QModelIndex & index, const QVariant & value, int role) override;
 
-    int rowCount(const QModelIndex & index = QModelIndex()) const;
+    int rowCount(const QModelIndex & index = QModelIndex()) const override;
 
-    int columnCount(const QModelIndex & index = QModelIndex()) const;
+    int columnCount(const QModelIndex & index = QModelIndex()) const override;
 
     void SetInterface(QSharedPointer<TableDataInterface> _interface);
 
     bool insertRow(int row, const QModelIndex & parent);
 
-    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
+    QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const override;
 
-    Qt::ItemFlags flags(const QModelIndex & index) const;
+    Qt::ItemFlags flags(const QModelIndex & index) const override;
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
     void ClearData();
 
@@ -50,6 +49,7 @@ Q_OBJECT
 
     int RowForValue(void* value);
 
+    void sort();
 
     void RemoveRow(const QModelIndex & index);
 
@@ -63,8 +63,8 @@ public slots:
   private:
 
 
-//Q_DECLARE_PRIVATE(AdaptingTableModel)
+Q_DECLARE_PRIVATE(AdaptingTableModel)
   protected:
-     AdaptingTableModelPrivate*  d = nullptr;
+     AdaptingTableModelPrivate* const d_ptr;
 };
 #endif

@@ -5,10 +5,9 @@
 #include "../include/AdaptingTableModel.h"
 #include "../include/TableDataInterface.h"
 
-AdaptingTableModelPrivate::AdaptingTableModelPrivate(AdaptingTableModel *q)
+AdaptingTableModelPrivate::AdaptingTableModelPrivate() 
 {
     // Bouml preserved body begin 0021CD2A
-    this->q = q;
 	// Bouml preserved body end 0021CD2A
 }
 
