@@ -70,4 +70,5 @@ class L_TREE_CONTROLLER_EXPORT TreeItemInterface : public std::enable_shared_fro
     virtual void SetChildrenExclusive(bool value) = 0;
 
     std::shared_ptr<TreeItemInterface> GetPtr() { return shared_from_this();}
+    virtual std::shared_ptr<TreeItemInterface> Clone(std::shared_ptr<TreeItemInterface> parent) = 0;
 };

@@ -110,6 +110,22 @@ public:
     virtual void AddChildren(QList<ItemPointerType> children, int insertAfter = 0);
     bool AreChildrenExclusive()  const {return childrenExclusive;}
     void SetChildrenExclusive(bool value) {childrenExclusive = value;}
+    std::shared_ptr<TreeItemInterface> Clone(std::shared_ptr<TreeItemInterface> parent){
+        std::unique_ptr<TreeItem<T>> clonedItem(new TreeItem<T>());
+        clonedItem->childrenExclusive = this->childrenExclusive;
+        clonedItem->m_isCheckable = this->m_isCheckable;
+        clonedItem->m_checkState = this->m_checkState;
+        clonedItem->controller = this->controller;
+        clonedItem->m_data = this->m_data;
+        clonedItem->font = this->font;
+        clonedItem->SetParent(parent);
+        std::shared_ptr<TreeItemInterface> newPtr(clonedItem.release());
+
+        for(auto child: m_children){
+            newPtr->addChild(child->Clone(newPtr));
+        }
+        return newPtr;
+    };
 
 private:
     T m_data;
