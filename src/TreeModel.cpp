@@ -25,6 +25,8 @@ TreeModel::TreeModel(QObject * parent)
                 return  QVariant(static_cast< int >( item->checkState() ? Qt::Checked : Qt::Unchecked ));
             if(role == Qt::ForegroundRole)
                 return QVariant(item->data(index.column(),role));
+            if(role == Qt::BackgroundRole)
+                return QVariant(item->data(index.column(),role));
             if(role == Qt::ToolTipRole)
                 return QVariant(item->data(index.column(),role));
             if(role == Qt::DisplayRole || role == Qt::EditRole || role == Qt::FontRole)
