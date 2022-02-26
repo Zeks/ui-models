@@ -63,3 +63,5 @@ E_MailerSetup/
 E_RxManager/
 mngrParser/
 !UML/*
+
+*.user
